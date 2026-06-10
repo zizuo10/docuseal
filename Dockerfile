@@ -24,8 +24,9 @@ RUN apk add --no-cache nodejs yarn git build-base ruby ruby-dev libpq-dev yaml-d
 
 COPY ./package.json ./yarn.lock ./Gemfile ./Gemfile.lock ./
 
-RUN yarn install --network-timeout 1000000 && \
-    bundle install
+RUN yarn install --network-timeout 1000000 
+RUN gem install shakapacker
+
 
 COPY ./bin ./bin
 COPY ./config/webpack ./config/webpack
@@ -38,7 +39,7 @@ COPY ./tailwind.application.config.js ./tailwind.application.config.js
 COPY ./app/javascript ./app/javascript
 COPY ./app/views ./app/views
 
-RUN bundle exec shakapacker
+RUN shakapacker
 
 FROM ruby:4.0.5-alpine AS app
 
