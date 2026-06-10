@@ -22,12 +22,11 @@ WORKDIR /app
 
 RUN apk add --no-cache nodejs yarn git build-base ruby ruby-dev
 
-COPY ./package.json ./yarn.lock ./Gemfile ./Gemfile.lock ./
+COPY ./package.json ./yarn.lock ./
 
-RUN yarn install --network-timeout 1000000 && \
-    bundle install
+RUN yarn install --network-timeout 1000000
 
-COPY ./bin ./bin
+COPY ./bin/shakapacker ./bin/shakapacker
 COPY ./config/webpack ./config/webpack
 COPY ./config/shakapacker.yml ./config/shakapacker.yml
 COPY ./postcss.config.js ./postcss.config.js
@@ -38,7 +37,7 @@ COPY ./tailwind.application.config.js ./tailwind.application.config.js
 COPY ./app/javascript ./app/javascript
 COPY ./app/views ./app/views
 
-RUN bundle exec shakapacker
+RUN echo "gem 'shakapacker'" > Gemfile && bundle exec shakapacker
 
 FROM ruby:4.0.5-alpine AS app
 
