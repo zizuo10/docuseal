@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Signature Reminder</title>
+  <style>
+    body{margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#1f2937}
+    .wrap{max-width:600px;margin:40px auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+    .hdr{background:#1d4ed8;padding:24px 32px}
+    .hdr img{max-height:48px;max-width:180px;object-fit:contain}
+    .hdr h1{margin:0;color:#fff;font-size:20px;font-weight:600}
+    .body{padding:32px}
+    .body p{margin:0 0 16px;line-height:1.6;font-size:15px}
+    .btn{display:inline-block;padding:12px 28px;background:#1d4ed8;color:#fff!important;text-decoration:none;border-radius:6px;font-weight:600;font-size:15px}
+    .foot{padding:24px 32px;background:#f9fafb;border-top:1px solid #e5e7eb;font-size:12px;color:#6b7280}
+    .foot a{color:#6b7280}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hdr">
+    <% if @account.logo.attached? %>
+      <img src="<%= @account.logo_url %>" alt="<%= @account.name %>">
+    <% else %>
+      <h1><%= @account.name.presence || 'DocuSeal' %></h1>
+    <% end %>
+  </div>
+  <div class="body">
+    <p>Hello<%= @submitter.name.present? ? " #{@submitter.name}" : '' %>,</p>
+    <p>This is a reminder that your signature is still required on <strong><%= @submission.template&.name.presence || 'a document' %></strong>.</p>
+    <p style="text-align:center;margin:32px 0">
+      <a href="<%= @signing_url %>" class="btn">Review &amp; Sign Document</a>
+    </p>
+    <p style="font-size:13px;color:#6b7280">If the button above doesn't work, copy and paste this link:<br>
+      <a href="<%= @signing_url %>" style="color:#1d4ed8;word-break:break-all"><%= @signing_url %></a></p>
+    <p style="font-size:13px;color:#6b7280">If you received this in error, please ignore it.</p>
+  </div>
+  <div class="foot">
+    <p>&copy; <%= Date.current.year %> <%= @account.name.presence || 'DocuSeal' %>. Powered by <a href="https://www.docuseal.com">DocuSeal</a>.</p>
+  </div>
+</div>
+</body>
+</html>

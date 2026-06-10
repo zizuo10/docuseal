@@ -1,0 +1,10 @@
+Hello<%= @submitter.name.present? ? " #{@submitter.name}" : '' %>,
+
+This is a reminder that your signature is required on "<%= @submission.template&.name.presence || 'a document' %>".
+
+Review and sign here: <%= @signing_url %>
+
+If you received this in error, please ignore it.
+
+---
+(c) <%= Date.current.year %> <%= @account.name.presence || 'DocuSeal' %>

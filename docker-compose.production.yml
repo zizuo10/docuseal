@@ -1,0 +1,96 @@
+version: '3.9'
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    environment:
+      HOST: ${HOST:?HOST required}
+    depends_on: [app]
+    networks: [frontend]
+
+  app:
+    image: docuseal/docuseal:latest
+    restart: unless-stopped
+    user: "2000:2000"
+    expose: ["3000"]
+    environment:
+      DATABASE_URL:   ${DATABASE_URL}
+      REDIS_URL:      ${REDIS_URL:-redis://redis:6379/0}
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+      HOST:           ${HOST}
+      SMTP_HOST:      ${SMTP_HOST}
+      SMTP_PORT:      ${SMTP_PORT:-587}
+      SMTP_DOMAIN:    ${SMTP_DOMAIN}
+      SMTP_USERNAME:  ${SMTP_USERNAME}
+      SMTP_PASSWORD:  ${SMTP_PASSWORD}
+      SMTP_FROM:      ${SMTP_FROM}
+      RAILS_ENV:      production
+      RAILS_LOG_TO_STDOUT: "true"
+    volumes: [app_storage:/data]
+    depends_on:
+      db:    { condition: service_healthy }
+      redis: { condition: service_healthy }
+    networks: [frontend, backend]
+    healthcheck:
+      test: ["CMD","wget","--spider","-q","http://localhost:3000/health"]
+      interval: 30s; timeout: 10s; retries: 5
+
+  worker:
+    image: docuseal/docuseal:latest
+    restart: unless-stopped
+    user: "2000:2000"
+    command: bundle exec sidekiq -q default -q reminders -q mailers
+    environment:
+      DATABASE_URL:    ${DATABASE_URL}
+      REDIS_URL:       ${REDIS_URL:-redis://redis:6379/0}
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+      RAILS_ENV:       production
+      SMTP_HOST:       ${SMTP_HOST}
+      SMTP_PORT:       ${SMTP_PORT:-587}
+      SMTP_DOMAIN:     ${SMTP_DOMAIN}
+      SMTP_USERNAME:   ${SMTP_USERNAME}
+      SMTP_PASSWORD:   ${SMTP_PASSWORD}
+    volumes: [app_storage:/data]
+    depends_on: [app, redis]
+    networks: [backend]
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       docuseal
+      POSTGRES_USER:     docuseal
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD required}
+    volumes: [postgres_data:/var/lib/postgresql/data]
+    networks: [backend]
+    healthcheck:
+      test: ["CMD-SHELL","pg_isready -U docuseal"]
+      interval: 10s; timeout: 5s; retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-changeme}
+    volumes: [redis_data:/data]
+    networks: [backend]
+    healthcheck:
+      test: ["CMD","redis-cli","ping"]
+      interval: 10s; timeout: 3s; retries: 5
+
+volumes:
+  caddy_data: {}
+  caddy_config: {}
+  app_storage: {}
+  postgres_data: {}
+  redis_data: {}
+
+networks:
+  frontend: {}
+  backend:
+    internal: true
