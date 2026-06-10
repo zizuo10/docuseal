@@ -21,6 +21,7 @@ module Docuseal
     # ENTERPRISE: Security headers + rate limiting
     require_relative '../lib/middleware/security_headers_middleware'
     config.middleware.insert_before 0, SecurityHeadersMiddleware
+    require 'rack/attack'
     config.middleware.use Rack::Attack
   end
 end
